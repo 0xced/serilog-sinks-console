@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.ComponentModel;
-
 namespace Serilog.Sinks.SystemConsole.Themes
 {
     /// <summary>
@@ -73,13 +70,6 @@ namespace Serilog.Sinks.SystemConsole.Themes
         /// All other scalar values, e.g. <see cref="System.Guid"/> instances.
         /// </summary>
         Scalar,
-
-        /// <summary>
-        /// Unrecognized literal values, e.g. <see cref="System.Guid"/> instances.
-        /// </summary>
-        [Obsolete("Use ConsoleThemeStyle.Scalar instead")]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        Object = Scalar,
 
         /// <summary>
         /// Level indicator.
