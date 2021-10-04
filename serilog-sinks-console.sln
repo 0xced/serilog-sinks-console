@@ -19,9 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{E9D1B5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7D0692CD-F95D-4BF9-8C63-B4A1C078DF23}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Console", "src\Serilog.Sinks.Console\Serilog.Sinks.Console.csproj", "{866A028E-27DB-49A0-AC78-E5FEF247C099}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.SpectreConsole", "src\Serilog.Sinks.SpectreConsole\Serilog.Sinks.SpectreConsole.csproj", "{866A028E-27DB-49A0-AC78-E5FEF247C099}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Console.Tests", "test\Serilog.Sinks.Console.Tests\Serilog.Sinks.Console.Tests.csproj", "{1D56534C-4009-42C2-A573-789CAE6B8AA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.SpectreConsole.Tests", "test\Serilog.Sinks.SpectreConsole.Tests\Serilog.Sinks.SpectreConsole.Tests.csproj", "{1D56534C-4009-42C2-A573-789CAE6B8AA9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{CF817664-4CEC-4B6A-9C57-A0D687757D82}"
 EndProject

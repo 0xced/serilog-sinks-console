@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Serilog.Sinks.Console\Serilog.Sinks.Console.csproj" />
+    <ProjectReference Include="..\..\src\Serilog.Sinks.SpectreConsole\Serilog.Sinks.SpectreConsole.csproj" />
   </ItemGroup>
 
 </Project>

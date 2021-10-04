@@ -1,5 +1,5 @@
 ﻿using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Sinks.SpectreConsole.Themes;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
