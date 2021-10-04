@@ -59,17 +59,15 @@ namespace Serilog.Sinks.SpectreConsole.Rendering
 
         int RenderTextToken(TextToken tt, IAnsiConsole console)
         {
-            var count = 0;
-            var style = _theme.GetStyle(ConsoleThemeStyle.Text);
-            console.Write(tt.Text, style);
-            return count;
+            console.WriteText(tt.Text, _theme);
+            return 0;
         }
 
         int RenderPropertyToken(PropertyToken pt, IReadOnlyDictionary<string, LogEventPropertyValue> properties, IAnsiConsole console)
         {
             if (!properties.TryGetValue(pt.PropertyName, out var propertyValue))
             {
-                console.Write(pt.ToString(), _theme.GetStyle(ConsoleThemeStyle.Invalid));
+                console.WriteInvalid(pt.ToString(), _theme);
                 return 0;
             }
 
@@ -109,7 +107,7 @@ namespace Serilog.Sinks.SpectreConsole.Rendering
         {
             if (_isLiteral && propertyValue is ScalarValue { Value: string text })
             {
-                console.Write(text, theme.GetStyle(ConsoleThemeStyle.String));
+                console.WriteString(text, theme);
                 return 0;
             }
 

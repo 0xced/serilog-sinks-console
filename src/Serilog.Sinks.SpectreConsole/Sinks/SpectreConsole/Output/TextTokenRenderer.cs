@@ -31,7 +31,7 @@ namespace Serilog.Sinks.SpectreConsole.Output
 
         public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
-            console.Write(_text, _theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+            console.WriteTertiaryText(_text, _theme);
         }
     }
 }

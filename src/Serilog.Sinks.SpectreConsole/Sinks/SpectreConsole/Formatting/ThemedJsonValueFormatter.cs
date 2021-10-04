@@ -55,51 +55,44 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
             if (sequence == null)
                 throw new ArgumentNullException(nameof(sequence));
 
-            var count = 0;
-
-            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
-
-            state.Console.Write("[", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("[", Theme);
 
             var delim = string.Empty;
             foreach (var element in sequence.Elements)
             {
                 if (delim.Length != 0)
                 {
-                    state.Console.Write(delim, tertiaryTextStyle);
+                    state.Console.WriteTertiaryText(delim, Theme);
                 }
 
                 delim = ", ";
                 Visit(state.Nest(), element);
             }
 
-            state.Console.Write("]", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("]", Theme);
 
-            return count;
+            return 0;
         }
 
         protected override int VisitStructureValue(ThemedValueFormatterState state, StructureValue structure)
         {
             var count = 0;
 
-            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
-
-            state.Console.Write("{", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
             foreach (var property in structure.Properties)
             {
                 if (delim.Length != 0)
                 {
-                    state.Console.Write(delim, tertiaryTextStyle);
+                    state.Console.WriteTertiaryText(delim, Theme);
                 }
 
                 delim = ", ";
 
-                var nameStyle = Theme.GetStyle(ConsoleThemeStyle.Name);
-                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(property.Name, buffer), nameStyle);
+                state.Console.WriteName(buffer => JsonValueFormatter.WriteQuotedJsonString(property.Name, buffer), Theme);
 
-                state.Console.Write(": ", tertiaryTextStyle);
+                state.Console.WriteTertiaryText(": ", Theme);
 
                 count += Visit(state.Nest(), property.Value);
             }
@@ -107,19 +100,16 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             if (structure.TypeTag != null)
             {
-                var nameStyle = Theme.GetStyle(ConsoleThemeStyle.Name);
-                var stringStyle = Theme.GetStyle(ConsoleThemeStyle.String);
+                state.Console.WriteTertiaryText(delim, Theme);
 
-                state.Console.Write(delim, tertiaryTextStyle);
+                state.Console.WriteName(buffer => JsonValueFormatter.WriteQuotedJsonString("$type", buffer), Theme);
 
-                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString("$type", buffer), nameStyle);
+                state.Console.WriteTertiaryText(": ", Theme);
 
-                state.Console.Write(": ", tertiaryTextStyle);
-
-                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(structure.TypeTag, buffer), stringStyle);
+                state.Console.WriteString(buffer => JsonValueFormatter.WriteQuotedJsonString(structure.TypeTag, buffer), Theme);
             }
 
-            state.Console.Write("}", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("}", Theme);
 
             return count;
         }
@@ -128,16 +118,14 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
         {
             var count = 0;
 
-            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
-
-            state.Console.Write("{", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
             foreach (var element in dictionary.Elements)
             {
                 if (delim.Length != 0)
                 {
-                    state.Console.Write(delim, tertiaryTextStyle);
+                    state.Console.WriteTertiaryText(delim, Theme);
                 }
 
                 delim = ", ";
@@ -151,12 +139,12 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                 var style = Theme.GetStyle(themeStyle);
                 state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString((element.Key.Value ?? "null").ToString() ?? "", buffer), style);
 
-                state.Console.Write(": ", tertiaryTextStyle);
+                state.Console.WriteTertiaryText(": ", Theme);
 
                 count += Visit(state.Nest(), element.Value);
             }
 
-            state.Console.Write("}", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("}", Theme);
 
             return count;
         }
@@ -168,70 +156,62 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             if (value is null)
             {
-                var nullStyle = Theme.GetStyle(ConsoleThemeStyle.Null);
-                console.Write("null", nullStyle);
+                console.WriteNull("null", Theme);
                 return count;
             }
 
             if (value is string str)
             {
-                var stringStyle = Theme.GetStyle(ConsoleThemeStyle.String);
-                console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), stringStyle);
+                console.WriteString(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), Theme);
                 return count;
             }
 
             if (value is ValueType)
             {
-                var numberStyle = Theme.GetStyle(ConsoleThemeStyle.Number);
-
                 if (value is int || value is uint || value is long || value is ulong || value is decimal || value is byte || value is sbyte || value is short || value is ushort)
                 {
-                    console.Write(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture), numberStyle);
+                    console.WriteNumber(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture), Theme);
                     return count;
                 }
 
                 if (value is double d)
                 {
                     if (double.IsNaN(d) || double.IsInfinity(d))
-                        console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(d.ToString(CultureInfo.InvariantCulture), buffer), numberStyle);
+                        console.WriteNumber(buffer => JsonValueFormatter.WriteQuotedJsonString(d.ToString(CultureInfo.InvariantCulture), buffer), Theme);
                     else
-                        console.Write(d.ToString("R", CultureInfo.InvariantCulture), numberStyle);
+                        console.WriteNumber(d.ToString("R", CultureInfo.InvariantCulture), Theme);
                     return count;
                 }
 
                 if (value is float f)
                 {
                     if (double.IsNaN(f) || double.IsInfinity(f))
-                        console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(f.ToString(CultureInfo.InvariantCulture), buffer), numberStyle);
+                        console.WriteNumber(buffer => JsonValueFormatter.WriteQuotedJsonString(f.ToString(CultureInfo.InvariantCulture), buffer), Theme);
                     else
-                        console.Write(f.ToString("R", CultureInfo.InvariantCulture), numberStyle);
+                        console.WriteNumber(f.ToString("R", CultureInfo.InvariantCulture), Theme);
                     return count;
                 }
 
                 if (value is bool b)
                 {
-                    var booleanStyle = Theme.GetStyle(ConsoleThemeStyle.Boolean);
-                    console.Write(b ? "true" : "false", booleanStyle);
+                    console.WriteBoolean(b ? "true" : "false", Theme);
                     return count;
                 }
 
-                var scalarStyle = Theme.GetStyle(ConsoleThemeStyle.Scalar);
-
                 if (value is char ch)
                 {
-                    console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(ch.ToString(), buffer), scalarStyle);
+                    console.WriteScalar(buffer => JsonValueFormatter.WriteQuotedJsonString(ch.ToString(), buffer), Theme);
                     return count;
                 }
 
                 if (value is DateTime || value is DateTimeOffset)
                 {
-                    console.Write($"\"{((IFormattable)value).ToString("O", CultureInfo.InvariantCulture)}\"", scalarStyle);
+                    console.WriteScalar($"\"{((IFormattable)value).ToString("O", CultureInfo.InvariantCulture)}\"", Theme);
                     return count;
                 }
             }
 
-            var style = Theme.GetStyle(ConsoleThemeStyle.Scalar);
-            console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(value.ToString() ?? "", buffer), style);
+            console.WriteScalar(buffer => JsonValueFormatter.WriteQuotedJsonString(value.ToString() ?? "", buffer), Theme);
             return count;
         }
     }

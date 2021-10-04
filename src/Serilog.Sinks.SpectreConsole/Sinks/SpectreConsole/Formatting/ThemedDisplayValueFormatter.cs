@@ -49,21 +49,21 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             var count = 0;
 
-            state.Console.Write("[", Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+            state.Console.WriteTertiaryText("[", Theme);
 
             var delim = string.Empty;
             foreach (var element in sequence.Elements)
             {
                 if (delim.Length != 0)
                 {
-                    state.Console.Write(delim, Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+                    state.Console.WriteTertiaryText(delim, Theme);
                 }
 
                 delim = ", ";
                 Visit(state, element);
             }
 
-            state.Console.Write("]", Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+            state.Console.WriteTertiaryText("]", Theme);
 
             return count;
         }
@@ -74,33 +74,33 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             if (structure.TypeTag != null)
             {
-                state.Console.Write(structure.TypeTag, Theme.GetStyle(ConsoleThemeStyle.Name));
+                state.Console.WriteName(structure.TypeTag, Theme);
 
                 state.Console.Write(" ");
             }
 
-            state.Console.Write("{", Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+            state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
             for (var index = 0; index < structure.Properties.Count; ++index)
             {
                 if (delim.Length != 0)
                 {
-                    state.Console.Write(delim, Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+                    state.Console.WriteTertiaryText(delim, Theme);
                 }
 
                 delim = ", ";
 
                 var property = structure.Properties[index];
 
-                state.Console.Write(property.Name, Theme.GetStyle(ConsoleThemeStyle.Name));
+                state.Console.WriteName(property.Name, Theme);
 
-                state.Console.Write("=", Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+                state.Console.WriteTertiaryText("=", Theme);
 
                 count += Visit(state.Nest(), property.Value);
             }
 
-            state.Console.Write("}", Theme.GetStyle(ConsoleThemeStyle.TertiaryText));
+            state.Console.WriteTertiaryText("}", Theme);
 
             return count;
         }
@@ -109,30 +109,28 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
         {
             var count = 0;
 
-            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
-
-            state.Console.Write("{", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
             foreach (var element in dictionary.Elements)
             {
                 if (delim.Length != 0)
                 {
-                    state.Console.Write(delim, tertiaryTextStyle);
+                    state.Console.WriteTertiaryText(delim, Theme);
                 }
 
                 delim = ", ";
 
-                state.Console.Write("[", tertiaryTextStyle);
+                state.Console.WriteTertiaryText("[", Theme);
 
                 count += Visit(state.Nest(), element.Key);
 
-                state.Console.Write("]=", tertiaryTextStyle);
+                state.Console.WriteTertiaryText("]=", Theme);
 
                 count += Visit(state.Nest(), element.Value);
             }
 
-            state.Console.Write("}", tertiaryTextStyle);
+            state.Console.WriteTertiaryText("}", Theme);
 
             return count;
         }
@@ -144,18 +142,16 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             if (value is null)
             {
-                var nullStyle = Theme.GetStyle(ConsoleThemeStyle.Null);
-                console.Write("null", nullStyle);
+                console.WriteNull("null", Theme);
                 return count;
             }
 
             if (value is string str)
             {
-                var stringStyle = Theme.GetStyle(ConsoleThemeStyle.String);
                 if (format != "l")
-                    console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), stringStyle);
+                    console.WriteString(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), Theme);
                 else
-                    console.Write(str, stringStyle);
+                    console.WriteString(str, Theme);
                 return count;
             }
 
@@ -165,28 +161,24 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                     value is decimal || value is byte || value is sbyte || value is short ||
                     value is ushort || value is float || value is double)
                 {
-                    var numberStyle = Theme.GetStyle(ConsoleThemeStyle.Number);
-                    console.Write(buffer => scalar.Render(buffer, format, _formatProvider), numberStyle);
+                    console.WriteNumber(buffer => scalar.Render(buffer, format, _formatProvider), Theme);
                     return count;
                 }
 
                 if (value is bool b)
                 {
-                    var booleanStyle = Theme.GetStyle(ConsoleThemeStyle.Boolean);
-                    console.Write(b.ToString(), booleanStyle);
+                    console.WriteBoolean(b.ToString(), Theme);
                     return count;
                 }
 
                 if (value is char ch)
                 {
-                    var scalarStyle = Theme.GetStyle(ConsoleThemeStyle.Scalar);
-                    console.Write($"'{ch}'", scalarStyle);
+                    console.WriteScalar($"'{ch}'", Theme);
                     return count;
                 }
             }
 
-            var style = Theme.GetStyle(ConsoleThemeStyle.Scalar);
-            console.Write(buffer => scalar.Render(buffer, format, _formatProvider), style);
+            console.WriteScalar(buffer => scalar.Render(buffer, format, _formatProvider), Theme);
             return count;
         }
     }
