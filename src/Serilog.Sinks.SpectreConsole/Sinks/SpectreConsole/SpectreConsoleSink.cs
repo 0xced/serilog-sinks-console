@@ -14,60 +14,42 @@
 
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting;
-using Serilog.Sinks.SpectreConsole.Themes;
-using System;
-using System.IO;
-using System.Text;
+using Serilog.Sinks.SpectreConsole.Output;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole
 {
     class SpectreConsoleSink : ILogEventSink
     {
-        readonly LogEventLevel? _standardErrorFromLevel;
-        readonly ConsoleTheme _theme;
-        readonly ITextFormatter _formatter;
-
-        const int DefaultWriteBufferCapacity = 256;
+        private readonly LogEventLevel? _standardErrorFromLevel;
+        private readonly OutputTemplateRenderer _templateRenderer;
+        private readonly IAnsiConsole _outConsole;
+        private readonly IAnsiConsole _errorConsole;
 
         public SpectreConsoleSink(
-            ConsoleTheme theme,
-            ITextFormatter formatter,
-            LogEventLevel? standardErrorFromLevel)
+            OutputTemplateRenderer templateRenderer,
+            LogEventLevel? standardErrorFromLevel,
+            IAnsiConsole outConsole,
+            IAnsiConsole errorConsole)
         {
             _standardErrorFromLevel = standardErrorFromLevel;
-            _theme = theme ?? throw new ArgumentNullException(nameof(theme));
-            _formatter = formatter;
+            _templateRenderer = templateRenderer;
+            _outConsole = outConsole;
+            _errorConsole = errorConsole;
         }
 
         public void Emit(LogEvent logEvent)
         {
-            var output = SelectOutputStream(logEvent.Level);
-
-            // ANSI escape codes can be pre-rendered into a buffer; however, if we're on Windows and
-            // using its console coloring APIs, the color switches would happen during the off-screen
-            // buffered write here and have no effect when the line is actually written out.
-            if (_theme.CanBuffer)
-            {
-                var buffer = new StringWriter(new StringBuilder(DefaultWriteBufferCapacity));
-                _formatter.Format(logEvent, buffer);
-                var formattedLogEventText = buffer.ToString();
-                output.Write(formattedLogEventText);
-                output.Flush();
-            }
-            else
-            {
-                _formatter.Format(logEvent, output);
-                output.Flush();
-            }
+            var console = SelectConsole(logEvent.Level);
+            _templateRenderer.Render(logEvent, console);
         }
 
-        TextWriter SelectOutputStream(LogEventLevel logEventLevel)
+        private IAnsiConsole SelectConsole(LogEventLevel logEventLevel)
         {
             if (_standardErrorFromLevel is null)
-                return Console.Out;
+                return _outConsole;
 
-            return logEventLevel < _standardErrorFromLevel ? Console.Out : Console.Error;
+            return logEventLevel < _standardErrorFromLevel ? _outConsole : _errorConsole;
         }
     }
 }

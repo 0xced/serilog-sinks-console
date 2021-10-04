@@ -13,11 +13,11 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.IO;
 using Serilog.Events;
 using Serilog.Parsing;
-using Serilog.Sinks.SpectreConsole.Rendering;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
+using Padding = Serilog.Sinks.SpectreConsole.Rendering.Padding;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
@@ -42,15 +42,11 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _levelToken = levelToken;
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
             var moniker = LevelOutputFormat.GetLevelMoniker(logEvent.Level, _levelToken.Format);
-            if (!Levels.TryGetValue(logEvent.Level, out var levelStyle))
-                levelStyle = ConsoleThemeStyle.Invalid;
-
-            var _ = 0;
-            using (_theme.Apply(output, levelStyle, ref _))
-                Padding.Apply(output, moniker, _levelToken.Alignment);
+            var levelStyle = Levels.TryGetValue(logEvent.Level, out var themeStyle) ? themeStyle : ConsoleThemeStyle.Invalid;
+            Padding.Apply(console, moniker, _theme.GetStyle(levelStyle), _levelToken.Alignment);
         }
     }
 }

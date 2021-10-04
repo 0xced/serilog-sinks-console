@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
-using System.IO;
 using Serilog.Events;
 using Serilog.Sinks.SpectreConsole.Output;
 using Serilog.Sinks.SpectreConsole.Tests.Support;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console.Testing;
 using Xunit;
 
 namespace Serilog.Sinks.SpectreConsole.Tests.Output
@@ -17,9 +17,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
             var french = new CultureInfo("fr-FR");
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Message}", french);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("{0}", 12.345));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("12,345", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("12,345", console.Output);
         }
 
         [Fact]
@@ -27,9 +27,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Message}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("{Message}", "Hello, world!"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("\"Hello, world!\"", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("\"Hello, world!\"", console.Output);
         }
 
         [Fact]
@@ -37,9 +37,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Name:u}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("{Name}", "Nick"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("NICK", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("NICK", console.Output);
         }
 
         [Fact]
@@ -47,9 +47,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Name:w}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("{Name}", "Nick"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("nick", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("nick", console.Output);
         }
 
         [Theory]
@@ -106,9 +106,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, $"{{Level:t{width}}}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Write(level, "Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal(expected, sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal(expected, console.Output);
         }
 
         [Fact]
@@ -116,9 +116,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Level:u3}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("INF", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("INF", console.Output);
         }
 
         [Fact]
@@ -126,9 +126,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Level:w3}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("inf", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("inf", console.Output);
         }
 
         [Fact]
@@ -136,9 +136,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Level}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("Information", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("Information", console.Output);
         }
 
         [Fact]
@@ -146,9 +146,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Level,5:w3}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("  inf", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("  inf", console.Output);
         }
 
         enum Size
@@ -187,9 +187,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Message}", new SizeFormatter(CultureInfo.InvariantCulture));
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Size {Size}", Size.Large));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("Size Huge", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("Size Huge", console.Output);
         }
 
         [Fact]
@@ -197,9 +197,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Properties}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.ForContext("Foo", 42).Information("Hello from {Bar}!", "bar"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("{Foo=42}", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("{Foo=42}", console.Output);
         }
 
         [Fact]
@@ -207,9 +207,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Properties}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.ForContext("Foo", 42).Information("Hello from {0}!", "bar"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("{Foo=42}", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("{Foo=42}", console.Output);
         }
 
         [Fact]
@@ -217,9 +217,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Foo} {Properties}", CultureInfo.InvariantCulture);
             var evt = DelegatingSink.GetLogEvent(l => l.ForContext("Foo", 42).ForContext("Bar", 42).Information("Hello from bar!"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal("42 {Bar=42}", sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal("42 {Bar=42}", console.Output);
         }
 
         [Theory]
@@ -232,9 +232,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Message" + format + "}", null);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Hello, {Name}!", "World"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal(expected, sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal(expected, console.Output);
         }
 
         [Theory]
@@ -246,9 +246,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Message" + format + "}", null);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("{@Obj}", new { Name = "World" }));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal(expected, sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal(expected, console.Output);
         }
 
         [Theory]
@@ -260,9 +260,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Properties" + format + "}", null);
             var evt = DelegatingSink.GetLogEvent(l => l.ForContext("Name", "World").Information("Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
-            Assert.Equal(expected, sw.ToString());
+            var console = new TestConsole();
+            formatter.Render(evt, console);
+            Assert.Equal(expected, console.Output);
         }
 
         [Fact]
@@ -270,16 +270,16 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
         {
             var formatter = new OutputTemplateRenderer(ConsoleTheme.None, "{Properties}", null);
             var evt = DelegatingSink.GetLogEvent(l => l.Information("Hello"));
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
+            var console = new TestConsole();
+            formatter.Render(evt, console);
 
             // /!\ different behavior from Serilog Core : https://github.com/serilog/serilog/blob/5c3a7821aa0f654e551dc21e8e19089f6767666b/test/Serilog.Tests/Formatting/Display/MessageTemplateTextFormatterTests.cs#L268-L278
             //
             // var expected = new StructureValue(Enumerable.Empty<LogEventProperty>()).ToString();
             // // expected == "{  }"
-            // Assert.Equal(expected, sw.ToString());
+            // Assert.Equal(expected, console.Output);
             //
-            Assert.Equal("{}", sw.ToString());
+            Assert.Equal("{}", console.Output);
         }
 
         [Theory]
@@ -308,11 +308,11 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
             {
                 l.Information("{MyDate}{MyNumber}", date, number);
             });
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
+            var console = new TestConsole();
+            formatter.Render(evt, console);
 
-            Assert.Contains(expectedFormattedDate, sw.ToString());
-            Assert.Contains(expectedFormattedNumber, sw.ToString());
+            Assert.Contains(expectedFormattedDate, console.Output);
+            Assert.Contains(expectedFormattedNumber, console.Output);
         }
 
         [Theory]
@@ -345,11 +345,11 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Output
                     MyNumber = number,
                 });
             });
-            var sw = new StringWriter();
-            formatter.Format(evt, sw);
+            var console = new TestConsole();
+            formatter.Render(evt, console);
 
-            Assert.Contains(expectedFormattedDate, sw.ToString());
-            Assert.Contains(expectedFormattedNumber, sw.ToString());
+            Assert.Contains(expectedFormattedDate, console.Output);
+            Assert.Contains(expectedFormattedNumber, console.Output);
         }
     }
 }

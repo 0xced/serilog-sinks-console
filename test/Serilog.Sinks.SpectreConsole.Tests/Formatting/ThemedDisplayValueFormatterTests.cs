@@ -1,7 +1,7 @@
-﻿using System.IO;
-using Serilog.Events;
+﻿using Serilog.Events;
 using Serilog.Sinks.SpectreConsole.Formatting;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console.Testing;
 using Xunit;
 
 namespace Serilog.Sinks.SpectreConsole.Tests.Formatting
@@ -14,9 +14,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Formatting
         public void StringFormattingIsApplied(string value, string format, string expected)
         {
             var formatter = new ThemedDisplayValueFormatter(ConsoleTheme.None, null);
-            var sw = new StringWriter();
-            formatter.FormatLiteralValue(new ScalarValue(value), sw, format);
-            var actual = sw.ToString();
+            var console = new TestConsole();
+            formatter.FormatLiteralValue(new ScalarValue(value), console, format);
+            var actual = console.Output;
             Assert.Equal(expected, actual);
         }
     }

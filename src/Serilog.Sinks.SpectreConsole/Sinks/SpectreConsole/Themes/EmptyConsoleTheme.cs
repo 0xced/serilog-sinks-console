@@ -12,19 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
+using System.Collections.Generic;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Themes
 {
     class EmptyConsoleTheme : ConsoleTheme
     {
-        public override bool CanBuffer => true;
-
-        protected override int ResetCharCount { get; }
-
-        public override int Set(TextWriter output, ConsoleThemeStyle style) => 0;
-
-        public override void Reset(TextWriter output)
+        public EmptyConsoleTheme() : base(new Dictionary<ConsoleThemeStyle, Style>(), exceptionSettings: null)
         {
         }
     }

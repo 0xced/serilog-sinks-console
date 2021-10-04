@@ -13,47 +13,32 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Serilog.Events;
 using Serilog.Parsing;
 using Serilog.Sinks.SpectreConsole.Formatting;
-using Serilog.Sinks.SpectreConsole.Rendering;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
     class PropertiesTokenRenderer : OutputTemplateTokenRenderer
     {
         readonly MessageTemplate _outputTemplate;
-        readonly ConsoleTheme _theme;
-        readonly PropertyToken _token;
         readonly ThemedValueFormatter _valueFormatter;
 
         public PropertiesTokenRenderer(ConsoleTheme theme, PropertyToken token, MessageTemplate outputTemplate, IFormatProvider? formatProvider)
         {
             _outputTemplate = outputTemplate;
-            _theme = theme ?? throw new ArgumentNullException(nameof(theme));
-            _token = token ?? throw new ArgumentNullException(nameof(token));
 
-            var isJson = false;
-
-            if (token.Format != null)
-            {
-                for (var i = 0; i < token.Format.Length; ++i)
-                {
-                    if (token.Format[i] == 'j')
-                        isJson = true;
-                }
-            }
+            var isJson = token.Format?.Any(e => e == 'j') ?? false;
 
             _valueFormatter = isJson
                 ? (ThemedValueFormatter)new ThemedJsonValueFormatter(theme, formatProvider)
                 : new ThemedDisplayValueFormatter(theme, formatProvider);
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
             var included = logEvent.Properties
                 .Where(p => !TemplateContainsPropertyName(logEvent.MessageTemplate, p.Key) &&
@@ -62,16 +47,7 @@ namespace Serilog.Sinks.SpectreConsole.Output
 
             var value = new StructureValue(included);
 
-            if (_token.Alignment is null || !_theme.CanBuffer)
-            {
-                _valueFormatter.Format(value, output, null);
-                return;
-            }
-
-            var buffer = new StringWriter(new StringBuilder(value.Properties.Count * 16));
-            var invisible = _valueFormatter.Format(value, buffer, null);
-            var str = buffer.ToString();
-            Padding.Apply(output, str, _token.Alignment.Value.Widen(invisible));
+            _valueFormatter.Format(value, console, null);
         }
 
         static bool TemplateContainsPropertyName(MessageTemplate template, string propertyName)

@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
 using Serilog.Events;
 using Serilog.Parsing;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
     class ExceptionTokenRenderer : OutputTemplateTokenRenderer
     {
-        const string StackFrameLinePrefix = "   ";
-
         readonly ConsoleTheme _theme;
 
         public ExceptionTokenRenderer(ConsoleTheme theme, PropertyToken pt)
@@ -30,22 +28,14 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _theme = theme;
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
             // Padding is never applied by this renderer.
 
             if (logEvent.Exception is null)
                 return;
 
-            var lines = new StringReader(logEvent.Exception.ToString());
-            string? nextLine;
-            while ((nextLine = lines.ReadLine()) != null)
-            {
-                var style = nextLine.StartsWith(StackFrameLinePrefix) ? ConsoleThemeStyle.SecondaryText : ConsoleThemeStyle.Text;
-                var _ = 0;
-                using (_theme.Apply(output, style, ref _))
-                    output.WriteLine(nextLine);
-            }
+            console.WriteException(logEvent.Exception, _theme.ExceptionSettings);
         }
     }
 }

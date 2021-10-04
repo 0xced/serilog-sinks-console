@@ -13,35 +13,30 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using Serilog.Events;
 using Serilog.Parsing;
 using Serilog.Sinks.SpectreConsole.Formatting;
 using Serilog.Sinks.SpectreConsole.Rendering;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
     class MessageTemplateOutputTokenRenderer : OutputTemplateTokenRenderer
     {
-        readonly ConsoleTheme _theme;
-        readonly PropertyToken _token;
         readonly ThemedMessageTemplateRenderer _renderer;
 
         public MessageTemplateOutputTokenRenderer(ConsoleTheme theme, PropertyToken token, IFormatProvider? formatProvider)
         {
-            _theme = theme ?? throw new ArgumentNullException(nameof(theme));
-            _token = token ?? throw new ArgumentNullException(nameof(token));
-
             bool isLiteral = false, isJson = false;
 
             if (token.Format != null)
             {
-                for (var i = 0; i < token.Format.Length; ++i)
+                foreach (var format in token.Format)
                 {
-                    if (token.Format[i] == 'l')
+                    if (format == 'l')
                         isLiteral = true;
-                    else if (token.Format[i] == 'j')
+                    else if (format == 'j')
                         isJson = true;
                 }
             }
@@ -53,18 +48,9 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _renderer = new ThemedMessageTemplateRenderer(theme, valueFormatter, isLiteral);
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
-            if (_token.Alignment is null || !_theme.CanBuffer)
-            {
-                _renderer.Render(logEvent.MessageTemplate, logEvent.Properties, output);
-                return;
-            }
-
-            var buffer = new StringWriter();
-            var invisible = _renderer.Render(logEvent.MessageTemplate, logEvent.Properties, buffer);
-            var value = buffer.ToString();
-            Padding.Apply(output, value, _token.Alignment.Value.Widen(invisible));
+            _renderer.Render(logEvent.MessageTemplate, logEvent.Properties, console);
         }
     }
 }

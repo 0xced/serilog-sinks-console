@@ -38,13 +38,13 @@ namespace SyncWritesDemo
             var logger1 = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.WithProperty("Logger", "logger1")
-                .WriteTo.SpectreConsole(theme: SystemConsoleTheme.Literate)
+                .WriteTo.SpectreConsole(theme: ConsoleTheme.Literate())
                 .CreateLogger();
 
             var logger2 = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.WithProperty("Logger", "logger2")
-                .WriteTo.SpectreConsole(theme: SystemConsoleTheme.Literate)
+                .WriteTo.SpectreConsole(theme: ConsoleTheme.Literate())
                 .CreateLogger();
 
             var options = new ParallelOptions { MaxDegreeOfParallelism = 8 };

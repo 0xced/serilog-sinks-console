@@ -14,10 +14,10 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Formatting
 {
@@ -45,9 +45,9 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             // At the top level, for scalar values, use "display" rendering.
             if (state.IsTopLevel)
-                return _displayFormatter.FormatLiteralValue(scalar, state.Output, state.Format);
+                return _displayFormatter.FormatLiteralValue(scalar, state.Console, state.Format);
 
-            return FormatLiteralValue(scalar, state.Output);
+            return FormatLiteralValue(scalar, state.Console);
         }
 
         protected override int VisitSequenceValue(ThemedValueFormatterState state, SequenceValue sequence)
@@ -57,24 +57,23 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             var count = 0;
 
-            using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                state.Output.Write('[');
+            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
+
+            state.Console.Write("[", tertiaryTextStyle);
 
             var delim = string.Empty;
-            for (var index = 0; index < sequence.Elements.Count; ++index)
+            foreach (var element in sequence.Elements)
             {
                 if (delim.Length != 0)
                 {
-                    using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                        state.Output.Write(delim);
+                    state.Console.Write(delim, tertiaryTextStyle);
                 }
 
                 delim = ", ";
-                Visit(state.Nest(), sequence.Elements[index]);
+                Visit(state.Nest(), element);
             }
 
-            using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                state.Output.Write(']');
+            state.Console.Write("]", tertiaryTextStyle);
 
             return count;
         }
@@ -83,48 +82,44 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
         {
             var count = 0;
 
-            using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                state.Output.Write('{');
+            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
+
+            state.Console.Write("{", tertiaryTextStyle);
 
             var delim = string.Empty;
-            for (var index = 0; index < structure.Properties.Count; ++index)
+            foreach (var property in structure.Properties)
             {
                 if (delim.Length != 0)
                 {
-                    using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                        state.Output.Write(delim);
+                    state.Console.Write(delim, tertiaryTextStyle);
                 }
 
                 delim = ", ";
 
-                var property = structure.Properties[index];
+                var nameStyle = Theme.GetStyle(ConsoleThemeStyle.Name);
+                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(property.Name, buffer), nameStyle);
 
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.Name, ref count))
-                    JsonValueFormatter.WriteQuotedJsonString(property.Name, state.Output);
-
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                    state.Output.Write(": ");
+                state.Console.Write(": ", tertiaryTextStyle);
 
                 count += Visit(state.Nest(), property.Value);
             }
 
+
             if (structure.TypeTag != null)
             {
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                    state.Output.Write(delim);
+                var nameStyle = Theme.GetStyle(ConsoleThemeStyle.Name);
+                var stringStyle = Theme.GetStyle(ConsoleThemeStyle.String);
 
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.Name, ref count))
-                    JsonValueFormatter.WriteQuotedJsonString("$type", state.Output);
+                state.Console.Write(delim, tertiaryTextStyle);
 
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                    state.Output.Write(": ");
+                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString("$type", buffer), nameStyle);
 
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.String, ref count))
-                    JsonValueFormatter.WriteQuotedJsonString(structure.TypeTag, state.Output);
+                state.Console.Write(": ", tertiaryTextStyle);
+
+                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(structure.TypeTag, buffer), stringStyle);
             }
 
-            using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                state.Output.Write('}');
+            state.Console.Write("}", tertiaryTextStyle);
 
             return count;
         }
@@ -133,123 +128,110 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
         {
             var count = 0;
 
-            using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                state.Output.Write('{');
+            var tertiaryTextStyle = Theme.GetStyle(ConsoleThemeStyle.TertiaryText);
+
+            state.Console.Write("{", tertiaryTextStyle);
 
             var delim = string.Empty;
             foreach (var element in dictionary.Elements)
             {
                 if (delim.Length != 0)
                 {
-                    using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                        state.Output.Write(delim);
+                    state.Console.Write(delim, tertiaryTextStyle);
                 }
 
                 delim = ", ";
 
-                var style = element.Key.Value == null
+                var themeStyle = element.Key.Value == null
                     ? ConsoleThemeStyle.Null
                     : element.Key.Value is string
                         ? ConsoleThemeStyle.String
                         : ConsoleThemeStyle.Scalar;
 
-                using (ApplyStyle(state.Output, style, ref count))
-                    JsonValueFormatter.WriteQuotedJsonString((element.Key.Value ?? "null").ToString() ?? "", state.Output);
+                var style = Theme.GetStyle(themeStyle);
+                state.Console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString((element.Key.Value ?? "null").ToString() ?? "", buffer), style);
 
-                using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                    state.Output.Write(": ");
+                state.Console.Write(": ", tertiaryTextStyle);
 
                 count += Visit(state.Nest(), element.Value);
             }
 
-            using (ApplyStyle(state.Output, ConsoleThemeStyle.TertiaryText, ref count))
-                state.Output.Write('}');
+            state.Console.Write("}", tertiaryTextStyle);
 
             return count;
         }
 
-        int FormatLiteralValue(ScalarValue scalar, TextWriter output)
+        int FormatLiteralValue(ScalarValue scalar, IAnsiConsole console)
         {
             var value = scalar.Value;
             var count = 0;
 
-            if (value == null)
+            if (value is null)
             {
-                using (ApplyStyle(output, ConsoleThemeStyle.Null, ref count))
-                    output.Write("null");
+                var nullStyle = Theme.GetStyle(ConsoleThemeStyle.Null);
+                console.Write("null", nullStyle);
                 return count;
             }
 
             if (value is string str)
             {
-                using (ApplyStyle(output, ConsoleThemeStyle.String, ref count))
-                    JsonValueFormatter.WriteQuotedJsonString(str, output);
+                var stringStyle = Theme.GetStyle(ConsoleThemeStyle.String);
+                console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), stringStyle);
                 return count;
             }
 
             if (value is ValueType)
             {
+                var numberStyle = Theme.GetStyle(ConsoleThemeStyle.Number);
+
                 if (value is int || value is uint || value is long || value is ulong || value is decimal || value is byte || value is sbyte || value is short || value is ushort)
                 {
-                    using (ApplyStyle(output, ConsoleThemeStyle.Number, ref count))
-                        output.Write(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture));
+                    console.Write(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture), numberStyle);
                     return count;
                 }
 
                 if (value is double d)
                 {
-                    using (ApplyStyle(output, ConsoleThemeStyle.Number, ref count))
-                    {
-                        if (double.IsNaN(d) || double.IsInfinity(d))
-                            JsonValueFormatter.WriteQuotedJsonString(d.ToString(CultureInfo.InvariantCulture), output);
-                        else
-                            output.Write(d.ToString("R", CultureInfo.InvariantCulture));
-                    }
+                    if (double.IsNaN(d) || double.IsInfinity(d))
+                        console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(d.ToString(CultureInfo.InvariantCulture), buffer), numberStyle);
+                    else
+                        console.Write(d.ToString("R", CultureInfo.InvariantCulture), numberStyle);
                     return count;
                 }
 
                 if (value is float f)
                 {
-                    using (ApplyStyle(output, ConsoleThemeStyle.Number, ref count))
-                    {
-                        if (double.IsNaN(f) || double.IsInfinity(f))
-                            JsonValueFormatter.WriteQuotedJsonString(f.ToString(CultureInfo.InvariantCulture), output);
-                        else
-                            output.Write(f.ToString("R", CultureInfo.InvariantCulture));
-                    }
+                    if (double.IsNaN(f) || double.IsInfinity(f))
+                        console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(f.ToString(CultureInfo.InvariantCulture), buffer), numberStyle);
+                    else
+                        console.Write(f.ToString("R", CultureInfo.InvariantCulture), numberStyle);
                     return count;
                 }
 
                 if (value is bool b)
                 {
-                    using (ApplyStyle(output, ConsoleThemeStyle.Boolean, ref count))
-                        output.Write(b ? "true" : "false");
-
+                    var booleanStyle = Theme.GetStyle(ConsoleThemeStyle.Boolean);
+                    console.Write(b ? "true" : "false", booleanStyle);
                     return count;
                 }
 
+                var scalarStyle = Theme.GetStyle(ConsoleThemeStyle.Scalar);
+
                 if (value is char ch)
                 {
-                    using (ApplyStyle(output, ConsoleThemeStyle.Scalar, ref count))
-                        JsonValueFormatter.WriteQuotedJsonString(ch.ToString(), output);
+                    console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(ch.ToString(), buffer), scalarStyle);
                     return count;
                 }
 
                 if (value is DateTime || value is DateTimeOffset)
                 {
-                    using (ApplyStyle(output, ConsoleThemeStyle.Scalar, ref count))
-                    {
-                        output.Write('"');
-                        output.Write(((IFormattable)value).ToString("O", CultureInfo.InvariantCulture));
-                        output.Write('"');
-                    }
+                    console.Write($"\"{((IFormattable)value).ToString("O", CultureInfo.InvariantCulture)}\"", scalarStyle);
                     return count;
                 }
             }
 
-            using (ApplyStyle(output, ConsoleThemeStyle.Scalar, ref count))
-                JsonValueFormatter.WriteQuotedJsonString(value.ToString() ?? "", output);
-
+            var style = Theme.GetStyle(ConsoleThemeStyle.Scalar);
+            console.Write(buffer => JsonValueFormatter.WriteQuotedJsonString(value.ToString() ?? "", buffer), style);
             return count;
         }
     }

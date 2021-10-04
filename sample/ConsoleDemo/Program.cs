@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using Serilog.Sinks.SpectreConsole.Themes;
 using System;
 using System.Threading;
@@ -11,7 +11,7 @@ namespace ConsoleDemo
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.SpectreConsole(theme: AnsiConsoleTheme.Code)
+                .WriteTo.SpectreConsole(theme: ConsoleTheme.Code())
                 .CreateLogger();
 
             try

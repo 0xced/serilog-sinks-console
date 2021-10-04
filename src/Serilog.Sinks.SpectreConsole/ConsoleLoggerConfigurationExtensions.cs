@@ -15,7 +15,6 @@
 using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting;
 using Serilog.Sinks.SpectreConsole;
 using Serilog.Sinks.SpectreConsole.Output;
 using Serilog.Sinks.SpectreConsole.Themes;
@@ -35,6 +34,9 @@ namespace Serilog
         /// Writes log events to <see cref="IAnsiConsole"/>.
         /// </summary>
         /// <param name="sinkConfiguration">Logger sink configuration.</param>
+        /// <param name="outConsole"></param>
+        /// <param name="errorConsole"></param>
+        /// <param name="exceptionSettings"></param>
         /// <param name="restrictedToMinimumLevel">The minimum level for
         /// events passed through the sink. Ignored when <paramref name="levelSwitch"/> is specified.</param>
         /// <param name="outputTemplate">A message template describing the format used to write to the sink.
@@ -44,19 +46,22 @@ namespace Serilog
         /// to be changed at runtime.</param>
         /// <param name="standardErrorFromLevel">Specifies the level at which events will be written to standard error.</param>
         /// <param name="theme">The theme to apply to the styled output. If not specified,
-        /// uses <see cref="SystemConsoleTheme.Literate"/>.</param>
+        /// uses <see cref="ConsoleTheme.Literate(ExceptionSettings)"/> with the specified <paramref name="exceptionSettings"/>.</param>
         /// <param name="applyThemeToRedirectedOutput">Applies the selected or default theme even when output redirection is detected.</param>
         /// <returns>Configuration object allowing method chaining.</returns>
         /// <exception cref="ArgumentNullException">When <paramref name="sinkConfiguration"/> is <code>null</code></exception>
         /// <exception cref="ArgumentNullException">When <paramref name="outputTemplate"/> is <code>null</code></exception>
         public static LoggerConfiguration SpectreConsole(
             this LoggerSinkConfiguration sinkConfiguration,
+            IAnsiConsole? outConsole = null,
+            IAnsiConsole? errorConsole = null,
+            ExceptionSettings? exceptionSettings = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             string outputTemplate = DefaultConsoleOutputTemplate,
             IFormatProvider? formatProvider = null,
             LoggingLevelSwitch? levelSwitch = null,
             LogEventLevel? standardErrorFromLevel = null,
-            ConsoleTheme? theme = null, 
+            ConsoleTheme? theme = null,
             bool applyThemeToRedirectedOutput = false)
         {
             if (sinkConfiguration is null) throw new ArgumentNullException(nameof(sinkConfiguration));
@@ -64,37 +69,12 @@ namespace Serilog
 
             var appliedTheme = !applyThemeToRedirectedOutput && (System.Console.IsOutputRedirected || System.Console.IsErrorRedirected) ?
                 ConsoleTheme.None :
-                theme ?? SystemConsoleThemes.Literate;
+                theme ?? ConsoleThemes.Literate(exceptionSettings);
 
             var formatter = new OutputTemplateRenderer(appliedTheme, outputTemplate, formatProvider);
-            return sinkConfiguration.Sink(new SpectreConsoleSink(appliedTheme, formatter, standardErrorFromLevel), restrictedToMinimumLevel, levelSwitch);
-        }
-
-        /// <summary>
-        /// Writes log events to <see cref="IAnsiConsole"/>.
-        /// </summary>
-        /// <param name="sinkConfiguration">Logger sink configuration.</param>
-        /// <param name="formatter">Controls the rendering of log events into text, for example to log JSON. To
-        /// control plain text formatting, use the overload that accepts an output template.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum level for
-        /// events passed through the sink. Ignored when <paramref name="levelSwitch"/> is specified.</param>
-        /// <param name="levelSwitch">A switch allowing the pass-through minimum level
-        /// to be changed at runtime.</param>
-        /// <param name="standardErrorFromLevel">Specifies the level at which events will be written to standard error.</param>
-        /// <returns>Configuration object allowing method chaining.</returns>
-        /// <exception cref="ArgumentNullException">When <paramref name="sinkConfiguration"/> is <code>null</code></exception>
-        /// <exception cref="ArgumentNullException">When <paramref name="formatter"/> is <code>null</code></exception>
-        public static LoggerConfiguration SpectreConsole(
-            this LoggerSinkConfiguration sinkConfiguration,
-            ITextFormatter formatter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            LoggingLevelSwitch? levelSwitch = null,
-            LogEventLevel? standardErrorFromLevel = null)
-        {
-            if (sinkConfiguration is null) throw new ArgumentNullException(nameof(sinkConfiguration));
-            if (formatter is null) throw new ArgumentNullException(nameof(formatter));
-
-            return sinkConfiguration.Sink(new SpectreConsoleSink(ConsoleTheme.None, formatter, standardErrorFromLevel), restrictedToMinimumLevel, levelSwitch);
+            outConsole ??= AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Out) });
+            errorConsole ??= AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Error) });
+            return sinkConfiguration.Sink(new SpectreConsoleSink(formatter, standardErrorFromLevel, outConsole, errorConsole), restrictedToMinimumLevel, levelSwitch);
         }
     }
 }

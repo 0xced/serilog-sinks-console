@@ -13,30 +13,25 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using Serilog.Data;
 using Serilog.Events;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Formatting
 {
     abstract class ThemedValueFormatter : LogEventPropertyValueVisitor<ThemedValueFormatterState, int>
     {
-        readonly ConsoleTheme _theme;
+        public ConsoleTheme Theme { get; }
 
         protected ThemedValueFormatter(ConsoleTheme theme)
         {
-            _theme = theme ?? throw new ArgumentNullException(nameof(theme));
+            Theme = theme ?? throw new ArgumentNullException(nameof(theme));
         }
 
-        protected StyleReset ApplyStyle(TextWriter output, ConsoleThemeStyle style, ref int invisibleCharacterCount)
+        public int Format(LogEventPropertyValue value, IAnsiConsole console, string? format, bool literalTopLevel = false)
         {
-            return _theme.Apply(output, style, ref invisibleCharacterCount);
-        }
-
-        public int Format(LogEventPropertyValue value, TextWriter output, string? format, bool literalTopLevel = false)
-        {
-            return Visit(new ThemedValueFormatterState { Output = output, Format = format, IsTopLevel = literalTopLevel }, value);
+            return Visit(new ThemedValueFormatterState { Console = console, Format = format, IsTopLevel = literalTopLevel }, value);
         }
 
         public abstract ThemedValueFormatter SwitchTheme(ConsoleTheme theme);

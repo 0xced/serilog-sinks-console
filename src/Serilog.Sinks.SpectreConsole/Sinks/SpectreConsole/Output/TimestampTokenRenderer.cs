@@ -16,8 +16,9 @@ using System;
 using System.IO;
 using Serilog.Events;
 using Serilog.Parsing;
-using Serilog.Sinks.SpectreConsole.Rendering;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
+using Padding = Serilog.Sinks.SpectreConsole.Rendering.Padding;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
@@ -34,27 +35,12 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _formatProvider = formatProvider;
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
-            // We need access to ScalarValue.Render() to avoid this alloc; just ensures
-            // that custom format providers are supported properly.
-            var sv = new ScalarValue(logEvent.Timestamp);
-
-            var _ = 0;
-            using (_theme.Apply(output, ConsoleThemeStyle.SecondaryText, ref _))
-            {
-                if (_token.Alignment is null)
-                {
-                    sv.Render(output, _token.Format, _formatProvider);
-                }
-                else
-                {
-                    var buffer = new StringWriter();
-                    sv.Render(buffer, _token.Format, _formatProvider);
-                    var str = buffer.ToString();
-                    Padding.Apply(output, str, _token.Alignment);
-                }
-            }
+            var timestamp = new ScalarValue(logEvent.Timestamp);
+            var buffer = new StringWriter();
+            timestamp.Render(buffer, _token.Format, _formatProvider);
+            Padding.Apply(console, buffer.ToString(), _theme.GetStyle(ConsoleThemeStyle.SecondaryText), _token.Alignment);
         }
     }
 }

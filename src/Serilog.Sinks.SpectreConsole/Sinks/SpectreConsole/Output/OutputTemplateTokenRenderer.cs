@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
 using Serilog.Events;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
     abstract class OutputTemplateTokenRenderer
     {
-        public abstract void Render(LogEvent logEvent, TextWriter output);
+        public abstract void Render(LogEvent logEvent, IAnsiConsole console);
     }
 }

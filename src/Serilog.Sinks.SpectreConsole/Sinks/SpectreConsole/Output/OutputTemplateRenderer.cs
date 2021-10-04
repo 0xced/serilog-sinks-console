@@ -14,16 +14,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Serilog.Events;
-using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using Serilog.Parsing;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
-    class OutputTemplateRenderer : ITextFormatter
+    class OutputTemplateRenderer
     {
         readonly OutputTemplateTokenRenderer[] _renderers;
 
@@ -75,13 +74,13 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _renderers = renderers.ToArray();
         }
 
-        public void Format(LogEvent logEvent, TextWriter output)
+        public void Render(LogEvent logEvent, IAnsiConsole console)
         {
             if (logEvent is null) throw new ArgumentNullException(nameof(logEvent));
-            if (output is null) throw new ArgumentNullException(nameof(output));
+            if (console is null) throw new ArgumentNullException(nameof(console));
 
             foreach (var renderer in _renderers)
-                renderer.Render(logEvent, output);
+                renderer.Render(logEvent, console);
         }
     }
 }

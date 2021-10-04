@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Formatting
 {
     struct ThemedValueFormatterState
     {
-        public TextWriter Output;
+        public IAnsiConsole Console;
         public string? Format;
         public bool IsTopLevel;
 
-        public ThemedValueFormatterState Nest() => new ThemedValueFormatterState { Output = Output };
+        public ThemedValueFormatterState Nest() => new ThemedValueFormatterState { Console = Console };
     }
 }

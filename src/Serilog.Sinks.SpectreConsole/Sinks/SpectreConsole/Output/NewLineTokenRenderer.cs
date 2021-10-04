@@ -13,10 +13,11 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using Serilog.Events;
 using Serilog.Parsing;
 using Serilog.Sinks.SpectreConsole.Rendering;
+using Spectre.Console;
+using Padding = Serilog.Sinks.SpectreConsole.Rendering.Padding;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
@@ -29,12 +30,12 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _alignment = alignment;
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
             if (_alignment.HasValue)
-                Padding.Apply(output, Environment.NewLine, _alignment.Value.Widen(Environment.NewLine.Length));
+                Padding.Apply(console, Environment.NewLine, Style.Plain, _alignment.Value.Widen(Environment.NewLine.Length));
             else
-                output.WriteLine();
+                console.WriteLine();
         }
     }
 }

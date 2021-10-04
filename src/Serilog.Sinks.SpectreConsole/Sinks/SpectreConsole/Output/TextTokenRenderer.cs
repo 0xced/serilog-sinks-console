@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
 using Serilog.Events;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console;
 
 namespace Serilog.Sinks.SpectreConsole.Output
 {
@@ -29,11 +29,9 @@ namespace Serilog.Sinks.SpectreConsole.Output
             _text = text;
         }
 
-        public override void Render(LogEvent logEvent, TextWriter output)
+        public override void Render(LogEvent logEvent, IAnsiConsole console)
         {
-            var _ = 0;
-            using (_theme.Apply(output, ConsoleThemeStyle.TertiaryText, ref _))
-                output.Write(_text);
+            console.Write(_text, _theme.GetStyle(ConsoleThemeStyle.TertiaryText));
         }
     }
 }

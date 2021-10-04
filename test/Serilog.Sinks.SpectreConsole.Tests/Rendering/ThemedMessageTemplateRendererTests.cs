@@ -3,9 +3,8 @@ using Serilog.Sinks.SpectreConsole.Rendering;
 using Serilog.Sinks.SpectreConsole.Themes;
 using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
+using Spectre.Console.Testing;
 using Xunit;
 
 namespace Serilog.Sinks.SpectreConsole.Tests.Rendering
@@ -127,13 +126,11 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Rendering
             if (binder.BindMessageTemplate(messageTemplate, properties, out var mt, out var props) == false)
                 throw new InvalidOperationException();
 
-            var output = new StringBuilder();
-            var writer = new StringWriter(output);
+            var console = new TestConsole();
             var renderer = new ThemedMessageTemplateRenderer(ConsoleTheme.None,
                 new ThemedDisplayValueFormatter(ConsoleTheme.None, formatProvider), false);
-            renderer.Render(mt, props.ToDictionary(p => p.Name, p => p.Value), writer);
-            writer.Flush();
-            return output.ToString();
+            renderer.Render(mt, props.ToDictionary(p => p.Name, p => p.Value), console);
+            return console.Output;
         }
 
         [Fact]

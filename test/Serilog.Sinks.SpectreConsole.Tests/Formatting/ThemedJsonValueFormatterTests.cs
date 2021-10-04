@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using Serilog.Events;
 using Serilog.Sinks.SpectreConsole.Formatting;
 using Serilog.Sinks.SpectreConsole.Themes;
+using Spectre.Console.Testing;
 using Xunit;
 
 namespace Serilog.Sinks.SpectreConsole.Tests.Formatting
@@ -19,9 +19,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Formatting
 
             public string Format(object literal)
             {
-                var output = new StringWriter();
-                Format(new SequenceValue(new[] { new ScalarValue(literal) }), output, null);
-                var o = output.ToString();
+                var console = new TestConsole();
+                Format(new SequenceValue(new[] { new ScalarValue(literal) }), console, null);
+                var o = console.Output;
                 return o.Substring(1, o.Length - 2);
             }
         }
@@ -84,9 +84,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Formatting
         static string Format(LogEventPropertyValue value)
         {
             var formatter = new TestThemedJsonValueFormatter();
-            var output = new StringWriter();
-            formatter.Format(value, output, null);
-            return output.ToString();
+            var console = new TestConsole();
+            formatter.Format(value, console, null);
+            return console.Output;
         }
 
         [Fact]
