@@ -23,30 +23,27 @@ using System.Text;
 
 namespace Serilog.Sinks.SystemConsole
 {
-    class ConsoleSink : ILogEventSink
+    class SpectreConsoleSink : ILogEventSink
     {
         readonly LogEventLevel? _standardErrorFromLevel;
         readonly ConsoleTheme _theme;
         readonly ITextFormatter _formatter;
-        readonly object _syncRoot;
 
         const int DefaultWriteBufferCapacity = 256;
 
-        static ConsoleSink()
+        static SpectreConsoleSink()
         {
             WindowsConsole.EnableVirtualTerminalProcessing();
         }
 
-        public ConsoleSink(
+        public SpectreConsoleSink(
             ConsoleTheme theme,
             ITextFormatter formatter,
-            LogEventLevel? standardErrorFromLevel,
-            object syncRoot)
+            LogEventLevel? standardErrorFromLevel)
         {
             _standardErrorFromLevel = standardErrorFromLevel;
             _theme = theme ?? throw new ArgumentNullException(nameof(theme));
             _formatter = formatter;
-            _syncRoot = syncRoot ?? throw new ArgumentNullException(nameof(syncRoot));
         }
 
         public void Emit(LogEvent logEvent)
@@ -61,19 +58,13 @@ namespace Serilog.Sinks.SystemConsole
                 var buffer = new StringWriter(new StringBuilder(DefaultWriteBufferCapacity));
                 _formatter.Format(logEvent, buffer);
                 var formattedLogEventText = buffer.ToString();
-                lock (_syncRoot)
-                {
-                    output.Write(formattedLogEventText);
-                    output.Flush();
-                }
+                output.Write(formattedLogEventText);
+                output.Flush();
             }
             else
             {
-                lock (_syncRoot)
-                {
-                    _formatter.Format(logEvent, output);
-                    output.Flush();
-                }
+                _formatter.Format(logEvent, output);
+                output.Flush();
             }
         }
 

@@ -11,7 +11,7 @@ namespace ConsoleDemo
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                .WriteTo.SpectreConsole(theme: AnsiConsoleTheme.Code)
                 .CreateLogger();
 
             try

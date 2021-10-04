@@ -17,7 +17,7 @@ namespace Serilog.Sinks.Console.Tests.Configuration
 
                 System.Console.SetOut(sw);
                 var config = new LoggerConfiguration()
-                    .WriteTo.Console(theme: AnsiConsoleTheme.Literate,
+                    .WriteTo.SpectreConsole(theme: AnsiConsoleTheme.Literate,
                         applyThemeToRedirectedOutput: false);
 
                 var logger = config.CreateLogger();
@@ -43,7 +43,7 @@ namespace Serilog.Sinks.Console.Tests.Configuration
 
                 System.Console.SetOut(sw);
                 var config = new LoggerConfiguration()
-                    .WriteTo.Console(theme: AnsiConsoleTheme.Literate,
+                    .WriteTo.SpectreConsole(theme: AnsiConsoleTheme.Literate,
                         applyThemeToRedirectedOutput: true);
 
                 var logger = config.CreateLogger();
