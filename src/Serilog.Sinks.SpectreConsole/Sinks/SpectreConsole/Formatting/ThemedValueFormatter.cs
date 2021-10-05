@@ -33,7 +33,5 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
         {
             return Visit(new ThemedValueFormatterState { Console = console, Format = format, IsTopLevel = literalTopLevel }, value);
         }
-
-        public abstract ThemedValueFormatter SwitchTheme(ConsoleTheme theme);
     }
 }

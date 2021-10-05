@@ -72,8 +72,9 @@ namespace Serilog
                 theme ?? ConsoleThemes.Literate(exceptionSettings);
 
             var formatter = new OutputTemplateRenderer(appliedTheme, outputTemplate, formatProvider);
-            outConsole ??= AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Out) });
-            errorConsole ??= AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Error) });
+            var consoleFactory = new AnsiConsoleFactory();
+            outConsole ??= consoleFactory.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Out) });
+            errorConsole ??= consoleFactory.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Error) });
             return sinkConfiguration.Sink(new SpectreConsoleSink(formatter, standardErrorFromLevel, outConsole, errorConsole), restrictedToMinimumLevel, levelSwitch);
         }
     }

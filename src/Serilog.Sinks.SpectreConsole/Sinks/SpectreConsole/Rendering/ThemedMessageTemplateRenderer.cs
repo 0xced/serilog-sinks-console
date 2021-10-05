@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Serilog.Events;
 using Serilog.Parsing;
 using Serilog.Sinks.SpectreConsole.Formatting;
@@ -28,15 +27,12 @@ namespace Serilog.Sinks.SpectreConsole.Rendering
         readonly ConsoleTheme _theme;
         readonly ThemedValueFormatter _valueFormatter;
         readonly bool _isLiteral;
-        static readonly ConsoleTheme NoTheme = new EmptyConsoleTheme();
-        readonly ThemedValueFormatter _unthemedValueFormatter;
 
         public ThemedMessageTemplateRenderer(ConsoleTheme theme, ThemedValueFormatter valueFormatter, bool isLiteral)
         {
             _theme = theme ?? throw new ArgumentNullException(nameof(theme));
             _valueFormatter = valueFormatter;
             _isLiteral = isLiteral;
-            _unthemedValueFormatter = valueFormatter.SwitchTheme(NoTheme);
         }
 
         public int Render(MessageTemplate template, IReadOnlyDictionary<string, LogEventPropertyValue> properties, IAnsiConsole console)
@@ -83,10 +79,10 @@ namespace Serilog.Sinks.SpectreConsole.Rendering
         {
             if (pt.Alignment == null) throw new ArgumentException("The PropertyToken should have a non-null Alignment.", nameof(pt));
 
-            var valueOutput = new StringWriter();
-            RenderValue(NoTheme, _unthemedValueFormatter, propertyValue, console, pt.Format);
+            var measuringConsole = new MeasuringConsole();
+            RenderValue(_theme, _valueFormatter, propertyValue, measuringConsole, pt.Format);
 
-            var valueLength = valueOutput.ToString().Length;
+            var valueLength = measuringConsole.Output.Length;
             if (valueLength >= pt.Alignment.Value.Width)
             {
                 return RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);

@@ -24,18 +24,11 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
     class ThemedJsonValueFormatter : ThemedValueFormatter
     {
         readonly ThemedDisplayValueFormatter _displayFormatter;
-        readonly IFormatProvider? _formatProvider;
 
         public ThemedJsonValueFormatter(ConsoleTheme theme, IFormatProvider? formatProvider)
             : base(theme)
         {
             _displayFormatter = new ThemedDisplayValueFormatter(theme, formatProvider);
-            _formatProvider = formatProvider;
-        }
-
-        public override ThemedValueFormatter SwitchTheme(ConsoleTheme theme)
-        {
-            return new ThemedJsonValueFormatter(theme, _formatProvider);
         }
 
         protected override int VisitScalarValue(ThemedValueFormatterState state, ScalarValue scalar)

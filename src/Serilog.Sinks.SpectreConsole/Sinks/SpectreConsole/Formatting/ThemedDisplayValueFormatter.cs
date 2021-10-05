@@ -30,11 +30,6 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
             _formatProvider = formatProvider;
         }
 
-        public override ThemedValueFormatter SwitchTheme(ConsoleTheme theme)
-        {
-            return new ThemedDisplayValueFormatter(theme, _formatProvider);
-        }
-
         protected override int VisitScalarValue(ThemedValueFormatterState state, ScalarValue scalar)
         {
             if (scalar is null)

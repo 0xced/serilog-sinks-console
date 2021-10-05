@@ -127,8 +127,9 @@ namespace Serilog.Sinks.SpectreConsole.Tests.Rendering
                 throw new InvalidOperationException();
 
             var console = new TestConsole();
-            var renderer = new ThemedMessageTemplateRenderer(ConsoleTheme.None,
-                new ThemedDisplayValueFormatter(ConsoleTheme.None, formatProvider), false);
+            var theme = ConsoleTheme.Literate();
+            var renderer = new ThemedMessageTemplateRenderer(theme,
+                new ThemedDisplayValueFormatter(theme, formatProvider), false);
             renderer.Render(mt, props.ToDictionary(p => p.Name, p => p.Value), console);
             return console.Output;
         }
