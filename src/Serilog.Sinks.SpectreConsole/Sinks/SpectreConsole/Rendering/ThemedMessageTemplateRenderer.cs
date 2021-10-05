@@ -35,47 +35,45 @@ namespace Serilog.Sinks.SpectreConsole.Rendering
             _isLiteral = isLiteral;
         }
 
-        public int Render(MessageTemplate template, IReadOnlyDictionary<string, LogEventPropertyValue> properties, IAnsiConsole console)
+        public void Render(MessageTemplate template, IReadOnlyDictionary<string, LogEventPropertyValue> properties, IAnsiConsole console)
         {
-            var count = 0;
             foreach (var token in template.Tokens)
             {
-                if (token is TextToken tt)
+                if (token is TextToken textToken)
                 {
-                    count += RenderTextToken(tt, console);
+                    RenderTextToken(textToken, console);
                 }
                 else
                 {
-                    var pt = (PropertyToken)token;
-                    count += RenderPropertyToken(pt, properties, console);
+                    RenderPropertyToken((PropertyToken)token, properties, console);
                 }
             }
-            return count;
         }
 
-        int RenderTextToken(TextToken tt, IAnsiConsole console)
+        void RenderTextToken(TextToken tt, IAnsiConsole console)
         {
             console.WriteText(tt.Text, _theme);
-            return 0;
         }
 
-        int RenderPropertyToken(PropertyToken pt, IReadOnlyDictionary<string, LogEventPropertyValue> properties, IAnsiConsole console)
+        void RenderPropertyToken(PropertyToken pt, IReadOnlyDictionary<string, LogEventPropertyValue> properties, IAnsiConsole console)
         {
             if (!properties.TryGetValue(pt.PropertyName, out var propertyValue))
             {
                 console.WriteInvalid(pt.ToString(), _theme);
-                return 0;
+                return;
             }
 
             if (!pt.Alignment.HasValue)
             {
-                return RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
+                RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
             }
-
-            return RenderAlignedPropertyTokenUnbuffered(pt, console, propertyValue);
+            else
+            {
+                RenderAlignedPropertyTokenUnbuffered(pt, console, propertyValue);
+            }
         }
 
-        int RenderAlignedPropertyTokenUnbuffered(PropertyToken pt, IAnsiConsole console, LogEventPropertyValue propertyValue)
+        void RenderAlignedPropertyTokenUnbuffered(PropertyToken pt, IAnsiConsole console, LogEventPropertyValue propertyValue)
         {
             if (pt.Alignment == null) throw new ArgumentException("The PropertyToken should have a non-null Alignment.", nameof(pt));
 
@@ -85,29 +83,33 @@ namespace Serilog.Sinks.SpectreConsole.Rendering
             var valueLength = measuringConsole.Output.Length;
             if (valueLength >= pt.Alignment.Value.Width)
             {
-                return RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
+                RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
+                return;
             }
 
             if (pt.Alignment.Value.Direction == AlignmentDirection.Left)
             {
-                var invisible = RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
+                RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
                 Padding.Apply(console, string.Empty, Style.Plain, pt.Alignment.Value.Widen(-valueLength));
-                return invisible;
+            }
+            else
+            {
+                Padding.Apply(console, string.Empty, Style.Plain, pt.Alignment.Value.Widen(-valueLength));
+                RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
             }
 
-            Padding.Apply(console, string.Empty, Style.Plain, pt.Alignment.Value.Widen(-valueLength));
-            return RenderValue(_theme, _valueFormatter, propertyValue, console, pt.Format);
         }
 
-        int RenderValue(ConsoleTheme theme, ThemedValueFormatter valueFormatter, LogEventPropertyValue propertyValue, IAnsiConsole console, string? format)
+        void RenderValue(ConsoleTheme theme, ThemedValueFormatter valueFormatter, LogEventPropertyValue propertyValue, IAnsiConsole console, string? format)
         {
             if (_isLiteral && propertyValue is ScalarValue { Value: string text })
             {
                 console.WriteString(text, theme);
-                return 0;
             }
-
-            return valueFormatter.Format(propertyValue, console, format, _isLiteral);
+            else
+            {
+                valueFormatter.Format(propertyValue, console, format, _isLiteral);
+            }
         }
     }
 }

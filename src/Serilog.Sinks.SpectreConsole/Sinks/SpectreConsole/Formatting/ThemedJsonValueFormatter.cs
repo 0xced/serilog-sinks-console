@@ -69,8 +69,6 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
         protected override int VisitStructureValue(ThemedValueFormatterState state, StructureValue structure)
         {
-            var count = 0;
-
             state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
@@ -87,7 +85,7 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
                 state.Console.WriteTertiaryText(": ", Theme);
 
-                count += Visit(state.Nest(), property.Value);
+                Visit(state.Nest(), property.Value);
             }
 
 
@@ -104,13 +102,11 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             state.Console.WriteTertiaryText("}", Theme);
 
-            return count;
+            return 0;
         }
 
         protected override int VisitDictionaryValue(ThemedValueFormatterState state, DictionaryValue dictionary)
         {
-            var count = 0;
-
             state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
@@ -134,29 +130,28 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
                 state.Console.WriteTertiaryText(": ", Theme);
 
-                count += Visit(state.Nest(), element.Value);
+                Visit(state.Nest(), element.Value);
             }
 
             state.Console.WriteTertiaryText("}", Theme);
 
-            return count;
+            return 0;
         }
 
         int FormatLiteralValue(ScalarValue scalar, IAnsiConsole console)
         {
             var value = scalar.Value;
-            var count = 0;
 
             if (value is null)
             {
                 console.WriteNull("null", Theme);
-                return count;
+                return 0;
             }
 
             if (value is string str)
             {
                 console.WriteString(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), Theme);
-                return count;
+                return 0;
             }
 
             if (value is ValueType)
@@ -164,7 +159,7 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                 if (value is int || value is uint || value is long || value is ulong || value is decimal || value is byte || value is sbyte || value is short || value is ushort)
                 {
                     console.WriteNumber(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture), Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is double d)
@@ -173,7 +168,7 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                         console.WriteNumber(buffer => JsonValueFormatter.WriteQuotedJsonString(d.ToString(CultureInfo.InvariantCulture), buffer), Theme);
                     else
                         console.WriteNumber(d.ToString("R", CultureInfo.InvariantCulture), Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is float f)
@@ -182,30 +177,30 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                         console.WriteNumber(buffer => JsonValueFormatter.WriteQuotedJsonString(f.ToString(CultureInfo.InvariantCulture), buffer), Theme);
                     else
                         console.WriteNumber(f.ToString("R", CultureInfo.InvariantCulture), Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is bool b)
                 {
                     console.WriteBoolean(b ? "true" : "false", Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is char ch)
                 {
                     console.WriteScalar(buffer => JsonValueFormatter.WriteQuotedJsonString(ch.ToString(), buffer), Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is DateTime || value is DateTimeOffset)
                 {
                     console.WriteScalar($"\"{((IFormattable)value).ToString("O", CultureInfo.InvariantCulture)}\"", Theme);
-                    return count;
+                    return 0;
                 }
             }
 
             console.WriteScalar(buffer => JsonValueFormatter.WriteQuotedJsonString(value.ToString() ?? "", buffer), Theme);
-            return count;
+            return 0;
         }
     }
 }

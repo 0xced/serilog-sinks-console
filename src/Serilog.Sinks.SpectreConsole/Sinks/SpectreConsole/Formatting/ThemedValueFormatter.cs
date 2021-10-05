@@ -22,16 +22,16 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 {
     abstract class ThemedValueFormatter : LogEventPropertyValueVisitor<ThemedValueFormatterState, int>
     {
-        public ConsoleTheme Theme { get; }
+        protected ConsoleTheme Theme { get; }
 
         protected ThemedValueFormatter(ConsoleTheme theme)
         {
             Theme = theme ?? throw new ArgumentNullException(nameof(theme));
         }
 
-        public int Format(LogEventPropertyValue value, IAnsiConsole console, string? format, bool literalTopLevel = false)
+        public void Format(LogEventPropertyValue value, IAnsiConsole console, string? format, bool literalTopLevel = false)
         {
-            return Visit(new ThemedValueFormatterState { Console = console, Format = format, IsTopLevel = literalTopLevel }, value);
+            Visit(new ThemedValueFormatterState { Console = console, Format = format, IsTopLevel = literalTopLevel }, value);
         }
     }
 }

@@ -42,8 +42,6 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
             if (sequence is null)
                 throw new ArgumentNullException(nameof(sequence));
 
-            var count = 0;
-
             state.Console.WriteTertiaryText("[", Theme);
 
             var delim = string.Empty;
@@ -60,13 +58,11 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
             state.Console.WriteTertiaryText("]", Theme);
 
-            return count;
+            return 0;
         }
 
         protected override int VisitStructureValue(ThemedValueFormatterState state, StructureValue structure)
         {
-            var count = 0;
-
             if (structure.TypeTag != null)
             {
                 state.Console.WriteName(structure.TypeTag, Theme);
@@ -92,18 +88,16 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
                 state.Console.WriteTertiaryText("=", Theme);
 
-                count += Visit(state.Nest(), property.Value);
+                Visit(state.Nest(), property.Value);
             }
 
             state.Console.WriteTertiaryText("}", Theme);
 
-            return count;
+            return 0;
         }
 
         protected override int VisitDictionaryValue(ThemedValueFormatterState state, DictionaryValue dictionary)
         {
-            var count = 0;
-
             state.Console.WriteTertiaryText("{", Theme);
 
             var delim = string.Empty;
@@ -118,27 +112,26 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
 
                 state.Console.WriteTertiaryText("[", Theme);
 
-                count += Visit(state.Nest(), element.Key);
+                Visit(state.Nest(), element.Key);
 
                 state.Console.WriteTertiaryText("]=", Theme);
 
-                count += Visit(state.Nest(), element.Value);
+                Visit(state.Nest(), element.Value);
             }
 
             state.Console.WriteTertiaryText("}", Theme);
 
-            return count;
+            return 0;
         }
 
         public int FormatLiteralValue(ScalarValue scalar, IAnsiConsole console, string? format)
         {
             var value = scalar.Value;
-            var count = 0;
 
             if (value is null)
             {
                 console.WriteNull("null", Theme);
-                return count;
+                return 0;
             }
 
             if (value is string str)
@@ -147,7 +140,7 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                     console.WriteString(buffer => JsonValueFormatter.WriteQuotedJsonString(str, buffer), Theme);
                 else
                     console.WriteString(str, Theme);
-                return count;
+                return 0;
             }
 
             if (value is ValueType)
@@ -157,24 +150,24 @@ namespace Serilog.Sinks.SpectreConsole.Formatting
                     value is ushort || value is float || value is double)
                 {
                     console.WriteNumber(buffer => scalar.Render(buffer, format, _formatProvider), Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is bool b)
                 {
                     console.WriteBoolean(b.ToString(), Theme);
-                    return count;
+                    return 0;
                 }
 
                 if (value is char ch)
                 {
                     console.WriteScalar($"'{ch}'", Theme);
-                    return count;
+                    return 0;
                 }
             }
 
             console.WriteScalar(buffer => scalar.Render(buffer, format, _formatProvider), Theme);
-            return count;
+            return 0;
         }
     }
 }
