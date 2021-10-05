@@ -28,6 +28,7 @@ namespace Serilog
     /// </summary>
     public static class ConsoleLoggerConfigurationExtensions
     {
+        private static readonly object DefaultSyncRoot = new object();
         const string DefaultConsoleOutputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}";
 
         /// <summary>
@@ -48,6 +49,9 @@ namespace Serilog
         /// <param name="theme">The theme to apply to the styled output. If not specified,
         /// uses <see cref="ConsoleTheme.Literate(ExceptionSettings)"/> with the specified <paramref name="exceptionSettings"/>.</param>
         /// <param name="applyThemeToRedirectedOutput">Applies the selected or default theme even when output redirection is detected.</param>
+        /// <param name="syncRoot">An object that will be used to `lock` (sync) access to the console output. If you specify this, you
+        /// will have the ability to lock on this object, and guarantee that the sink will not be about to output anything while
+        /// the lock is held.</param>
         /// <returns>Configuration object allowing method chaining.</returns>
         /// <exception cref="ArgumentNullException">When <paramref name="sinkConfiguration"/> is <code>null</code></exception>
         /// <exception cref="ArgumentNullException">When <paramref name="outputTemplate"/> is <code>null</code></exception>
@@ -62,7 +66,8 @@ namespace Serilog
             LoggingLevelSwitch? levelSwitch = null,
             LogEventLevel? standardErrorFromLevel = null,
             ConsoleTheme? theme = null,
-            bool applyThemeToRedirectedOutput = false)
+            bool applyThemeToRedirectedOutput = false,
+            object? syncRoot = null)
         {
             if (sinkConfiguration is null) throw new ArgumentNullException(nameof(sinkConfiguration));
             if (outputTemplate is null) throw new ArgumentNullException(nameof(outputTemplate));
@@ -71,11 +76,13 @@ namespace Serilog
                 ConsoleTheme.None :
                 theme ?? ConsoleThemes.Literate(exceptionSettings);
 
+            syncRoot ??= DefaultSyncRoot;
+
             var formatter = new OutputTemplateRenderer(appliedTheme, outputTemplate, formatProvider);
             var consoleFactory = new AnsiConsoleFactory();
             outConsole ??= consoleFactory.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Out) });
             errorConsole ??= consoleFactory.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Error) });
-            return sinkConfiguration.Sink(new SpectreConsoleSink(formatter, standardErrorFromLevel, outConsole, errorConsole), restrictedToMinimumLevel, levelSwitch);
+            return sinkConfiguration.Sink(new SpectreConsoleSink(formatter, standardErrorFromLevel, outConsole, errorConsole, syncRoot), restrictedToMinimumLevel, levelSwitch);
         }
     }
 }

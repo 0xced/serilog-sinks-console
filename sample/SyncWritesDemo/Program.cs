@@ -32,19 +32,18 @@ namespace SyncWritesDemo
             Console.WriteLine("Expecting one of the following arguments:{0}--sync-root-default{0}--sync-root-separate{0}--sync-root-same", Environment.NewLine);
         }
 
-        // TODO: rewrite with IExclusivityMode
         static void SystemConsoleSyncTest(object syncRootForLogger1, object syncRootForLogger2)
         {
             var logger1 = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.WithProperty("Logger", "logger1")
-                .WriteTo.SpectreConsole(theme: ConsoleTheme.Literate())
+                .WriteTo.SpectreConsole(theme: ConsoleTheme.Literate(), syncRoot: syncRootForLogger1)
                 .CreateLogger();
 
             var logger2 = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Enrich.WithProperty("Logger", "logger2")
-                .WriteTo.SpectreConsole(theme: ConsoleTheme.Literate())
+                .WriteTo.SpectreConsole(theme: ConsoleTheme.Literate(), syncRoot: syncRootForLogger2)
                 .CreateLogger();
 
             var options = new ParallelOptions { MaxDegreeOfParallelism = 8 };

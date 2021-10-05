@@ -25,23 +25,29 @@ namespace Serilog.Sinks.SpectreConsole
         private readonly OutputTemplateRenderer _templateRenderer;
         private readonly IAnsiConsole _outConsole;
         private readonly IAnsiConsole _errorConsole;
+        private readonly object _syncRoot;
 
         public SpectreConsoleSink(
             OutputTemplateRenderer templateRenderer,
             LogEventLevel? standardErrorFromLevel,
             IAnsiConsole outConsole,
-            IAnsiConsole errorConsole)
+            IAnsiConsole errorConsole,
+            object syncRoot)
         {
             _standardErrorFromLevel = standardErrorFromLevel;
             _templateRenderer = templateRenderer;
             _outConsole = outConsole;
             _errorConsole = errorConsole;
+            _syncRoot = syncRoot;
         }
 
         public void Emit(LogEvent logEvent)
         {
             var console = SelectConsole(logEvent.Level);
-            _templateRenderer.Render(logEvent, console);
+            lock (_syncRoot)
+            {
+                _templateRenderer.Render(logEvent, console);
+            }
         }
 
         private IAnsiConsole SelectConsole(LogEventLevel logEventLevel)
