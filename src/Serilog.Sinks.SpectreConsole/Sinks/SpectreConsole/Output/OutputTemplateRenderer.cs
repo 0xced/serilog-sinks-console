@@ -34,40 +34,24 @@ namespace Serilog.Sinks.SpectreConsole.Output
             var renderers = new List<OutputTemplateTokenRenderer>();
             foreach (var token in template.Tokens)
             {
-                if (token is TextToken tt)
+                if (token is TextToken textToken)
                 {
-                    renderers.Add(new TextTokenRenderer(theme, tt.Text));
-                    continue;
-                }
-
-                var pt = (PropertyToken)token;
-                if (pt.PropertyName == OutputProperties.LevelPropertyName)
-                {
-                    renderers.Add(new LevelTokenRenderer(theme, pt));
-                }
-                else if (pt.PropertyName == OutputProperties.NewLinePropertyName)
-                {
-                    renderers.Add(new NewLineTokenRenderer(pt.Alignment));
-                }
-                else if (pt.PropertyName == OutputProperties.ExceptionPropertyName)
-                {
-                    renderers.Add(new ExceptionTokenRenderer(theme, pt));
-                }
-                else if (pt.PropertyName == OutputProperties.MessagePropertyName)
-                {
-                    renderers.Add(new MessageTemplateOutputTokenRenderer(theme, pt, formatProvider));
-                }
-                else if (pt.PropertyName == OutputProperties.TimestampPropertyName)
-                {
-                    renderers.Add(new TimestampTokenRenderer(theme, pt, formatProvider));
-                }
-                else if (pt.PropertyName == "Properties")
-                {
-                    renderers.Add(new PropertiesTokenRenderer(theme, pt, template, formatProvider));
+                    renderers.Add(new TextTokenRenderer(theme, textToken.Text));
                 }
                 else
                 {
-                    renderers.Add(new EventPropertyTokenRenderer(theme, pt, formatProvider));
+                    var propertyToken = (PropertyToken)token;
+                    OutputTemplateTokenRenderer renderer = propertyToken.PropertyName switch
+                    {
+                        OutputProperties.LevelPropertyName => new LevelTokenRenderer(theme, propertyToken),
+                        OutputProperties.NewLinePropertyName => new NewLineTokenRenderer(propertyToken.Alignment),
+                        OutputProperties.ExceptionPropertyName => new ExceptionTokenRenderer(theme, propertyToken),
+                        OutputProperties.MessagePropertyName => new MessageTemplateOutputTokenRenderer(theme, propertyToken, formatProvider),
+                        OutputProperties.TimestampPropertyName => new TimestampTokenRenderer(theme, propertyToken, formatProvider),
+                        OutputProperties.PropertiesPropertyName => new PropertiesTokenRenderer(theme, propertyToken, template, formatProvider),
+                        _ => new EventPropertyTokenRenderer(theme, propertyToken, formatProvider)
+                    };
+                    renderers.Add(renderer);
                 }
             }
 
