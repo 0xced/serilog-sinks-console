@@ -48,7 +48,6 @@ namespace Serilog
         /// <param name="standardErrorFromLevel">Specifies the level at which events will be written to standard error.</param>
         /// <param name="theme">The theme to apply to the styled output. If not specified,
         /// uses <see cref="ConsoleTheme.Literate(ExceptionSettings)"/> with the specified <paramref name="exceptionSettings"/>.</param>
-        /// <param name="applyThemeToRedirectedOutput">Applies the selected or default theme even when output redirection is detected.</param>
         /// <param name="syncRoot">An object that will be used to `lock` (sync) access to the console output. If you specify this, you
         /// will have the ability to lock on this object, and guarantee that the sink will not be about to output anything while
         /// the lock is held.</param>
@@ -66,23 +65,20 @@ namespace Serilog
             LoggingLevelSwitch? levelSwitch = null,
             LogEventLevel? standardErrorFromLevel = null,
             ConsoleTheme? theme = null,
-            bool applyThemeToRedirectedOutput = false,
             object? syncRoot = null)
         {
             if (sinkConfiguration is null) throw new ArgumentNullException(nameof(sinkConfiguration));
             if (outputTemplate is null) throw new ArgumentNullException(nameof(outputTemplate));
 
-            var appliedTheme = !applyThemeToRedirectedOutput && (System.Console.IsOutputRedirected || System.Console.IsErrorRedirected) ?
-                ConsoleTheme.None :
-                theme ?? ConsoleThemes.Literate(exceptionSettings);
+            var appliedOutConsole = outConsole ?? AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Out) });
+            var appliedErrorConsole = errorConsole ?? AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Error) });
 
-            syncRoot ??= DefaultSyncRoot;
-
+            var appliedTheme = theme ?? ConsoleThemes.Literate(exceptionSettings);
             var formatter = new OutputTemplateRenderer(appliedTheme, outputTemplate, formatProvider);
-            var consoleFactory = new AnsiConsoleFactory();
-            outConsole ??= consoleFactory.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Out) });
-            errorConsole ??= consoleFactory.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(Console.Error) });
-            return sinkConfiguration.Sink(new SpectreConsoleSink(formatter, standardErrorFromLevel, outConsole, errorConsole, syncRoot), restrictedToMinimumLevel, levelSwitch);
+            var appliedSyncRoot = syncRoot ?? DefaultSyncRoot;
+            var sink = new SpectreConsoleSink(formatter, standardErrorFromLevel, appliedOutConsole, appliedErrorConsole, appliedSyncRoot);
+
+            return sinkConfiguration.Sink(sink, restrictedToMinimumLevel, levelSwitch);
         }
     }
 }
