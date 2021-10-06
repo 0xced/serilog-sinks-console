@@ -35,9 +35,10 @@ namespace Serilog
         /// Writes log events to <see cref="IAnsiConsole"/>.
         /// </summary>
         /// <param name="sinkConfiguration">Logger sink configuration.</param>
-        /// <param name="outConsole"></param>
-        /// <param name="errorConsole"></param>
-        /// <param name="exceptionSettings"></param>
+        /// <param name="outConsole">An <see cref="IAnsiConsole"/> that writes to the standard output or <see langword="null"/>
+        /// to use a console where all the features are automatically detected.</param>
+        /// <param name="errorConsole">An <see cref="IAnsiConsole"/> that writes to the standard error or <see langword="null"/>
+        /// to use a console where all the features are automatically detected.</param>
         /// <param name="restrictedToMinimumLevel">The minimum level for
         /// events passed through the sink. Ignored when <paramref name="levelSwitch"/> is specified.</param>
         /// <param name="outputTemplate">A message template describing the format used to write to the sink.
@@ -48,6 +49,7 @@ namespace Serilog
         /// <param name="standardErrorFromLevel">Specifies the level at which events will be written to standard error.</param>
         /// <param name="theme">The theme to apply to the styled output. If not specified,
         /// uses <see cref="ConsoleTheme.Literate(ExceptionSettings)"/> with the specified <paramref name="exceptionSettings"/>.</param>
+        /// <param name="exceptionSettings">The <see cref="ExceptionSettings"/> to apply when rendering exceptions.</param>
         /// <param name="syncRoot">An object that will be used to `lock` (sync) access to the console output. If you specify this, you
         /// will have the ability to lock on this object, and guarantee that the sink will not be about to output anything while
         /// the lock is held.</param>
@@ -58,13 +60,13 @@ namespace Serilog
             this LoggerSinkConfiguration sinkConfiguration,
             IAnsiConsole? outConsole = null,
             IAnsiConsole? errorConsole = null,
-            ExceptionSettings? exceptionSettings = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             string outputTemplate = DefaultConsoleOutputTemplate,
             IFormatProvider? formatProvider = null,
             LoggingLevelSwitch? levelSwitch = null,
             LogEventLevel? standardErrorFromLevel = null,
             ConsoleTheme? theme = null,
+            ExceptionSettings? exceptionSettings = null,
             object? syncRoot = null)
         {
             if (sinkConfiguration is null) throw new ArgumentNullException(nameof(sinkConfiguration));
